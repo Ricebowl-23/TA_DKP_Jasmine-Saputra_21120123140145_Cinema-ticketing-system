@@ -88,6 +88,7 @@ class TicketBookingApp:
         self.seat_buttons = []
         self.selected_seats = []
         self.bought_seats =[]
+        self.bought_seat =[]
         seat_frame = tk.Frame(self.cinema_tab, bg="black")
         seat_frame.pack(pady=10)
 
@@ -119,7 +120,7 @@ class TicketBookingApp:
             tk.Label(frame, text=food, bg="black", fg="white").pack(side='left', padx=10)
             tk.Label(frame, text=f"Rp{price}", bg="black", fg="white").pack(side='left', padx=10)
             var = tk.IntVar()
-            self.food_vars.append((var, price))
+            self.food_vars.append((var, food, price))
             tk.Spinbox(frame, from_=0, to=10, textvariable=var,
                        width=5).pack(side='left', padx=10)
 
@@ -161,19 +162,21 @@ class TicketBookingApp:
                for btn in self.seat_buttons:
                    if btn.cget("text") == seat:
                        btn.config(bg="#f0f0f0")
-               self.bought_seats.remove(seat)    
+               self.bought_seat.remove(seat)    
            else:
                self.selected_seats.append(seat)
                for btn in self.seat_buttons:
                    if btn.cget("text") == seat:
                        btn.config(bg='lightgreen')
-               self.bought_seats.append(seat)
+               self.bought_seat.append(seat)
 
 
     def buy_ticket(self):
         if not self.selected_seats:
             messagebox.showinfo("Warning", "You have not chosen a ticket.")
         else:
+            for seats in self.bought_seat:
+                self.bought_seats.append(seats)
             count = len(self.selected_seats)
             charge = count * 50000
             if self.Wallet2 >= charge:
@@ -196,11 +199,11 @@ class TicketBookingApp:
 
     def buy_food(self):
         total_cost = 0
-        for var, price in self.food_vars:
+        for var, food, price in self.food_vars:
             count = var.get()
             if count > 0:
                 total_cost += count * price
-                self.history.append(["Food", count, count * price])
+                self.history.append([food, count, count * price])
                 var.set(0)  # Set nilai var menjadi 0
 
         if total_cost > 0:
