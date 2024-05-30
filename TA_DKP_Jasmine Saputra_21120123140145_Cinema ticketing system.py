@@ -7,12 +7,12 @@ import os
 class TicketBookingApp:
     def __init__(self, root):
         self.root = root
-        self.root.state("zoomed")
         self.root.title("Movie Ticket Booking")
 
         self.Seats = [str(i) for i in range(1, 21)]
         self.history = []
         self.Wallet = 1500000
+        self.Wallet2 =self.Wallet
         self.total_charge = 0
 
         self.setup_frames()
@@ -20,8 +20,8 @@ class TicketBookingApp:
 
     def setup_frames(self):
         self.main_tab = tk.Frame(self.root, bg="beige")
-        self.cinema_tab = tk.Frame(self.root, bg="grey")
-        self.food_tab = tk.Frame(self.root, bg="grey")
+        self.cinema_tab = tk.Frame(self.root, bg="black")
+        self.food_tab = tk.Frame(self.root, bg="black")
         self.history_tab = tk.Frame(self.root, bg="beige")
 
         for frame in (self.main_tab, self.cinema_tab, self.food_tab, self.history_tab):
@@ -37,16 +37,16 @@ class TicketBookingApp:
 
     def setup_main_tab(self):
         tk.Label(self.main_tab, text="XXI", font=(
-            'Arial', 24), bg="beige").pack(pady=20)
+            'Times new roman', 24), bg="beige").pack(pady=10)
 
         content_frame = tk.Frame(self.main_tab, bg="beige")
-        content_frame.pack(pady=20, padx=20)
+        content_frame.pack(pady=10, padx=20)
 
         film_frame = tk.Frame(content_frame, bg="beige")
-        film_frame.grid(row=0, column=0, sticky="nw")
+        film_frame.grid(rowspan=5, column=0, sticky="nw")
 
         # Path absolut ke file gambar
-        image_path = r"C:\Users\Jasmine Saputra\DKP_TA_Jasmine Saputra_21120123140145_Cinema System\film_image.png"
+        image_path = r"C:\Users\Jasmine Saputra\DKP_TA_Jasmine Saputra_21120123140145_Cinema System\dkp_movie cover.jpg"
 
         try:
             self.film_image = Image.open(image_path)
@@ -62,21 +62,33 @@ class TicketBookingApp:
             self.cinema_tab)).pack(padx=10, pady=10)
 
         food_frame = tk.Frame(content_frame, bg="beige")
-        food_frame.grid(row=0, column=1, sticky="ne", padx=20)
+        food_frame.grid(row=0, column=1, padx=20)
 
         tk.Label(food_frame, text="Food and drink", bg="beige").pack(pady=5)
         tk.Button(food_frame, text="Order", command=lambda: self.show_frame(
             self.food_tab)).pack(pady=10)
+        
+        cart_frame = tk.Frame(content_frame, bg="beige")
+        cart_frame.grid(row=1, column=1, padx=20)
 
-        tk.Button(self.main_tab, text="Cart", command=lambda: self.show_frame(
+        self.label = tk.Label(cart_frame, text=f"Balance : Rp{self.Wallet}", bg="beige")
+        self.label.pack(pady=5)
+
+        tk.Button(cart_frame, text="Cart", command=lambda: self.show_frame(
             self.history_tab)).pack(pady=10)
+        
+        exit_frame = tk.Frame(content_frame, bg="beige")
+        exit_frame.grid(row=4, column=1, padx=20)
+
+        tk.Button(exit_frame, text="Exit", command=root.quit).pack(pady=10)
 
     def setup_cinema_tab(self):
         tk.Label(self.cinema_tab, text="Cinema", font=(
-            'Arial', 24), bg="grey").pack(pady=20)
+            'Arial', 24), bg="black", fg="white").pack(pady=20)
         self.seat_buttons = []
         self.selected_seats = []
-        seat_frame = tk.Frame(self.cinema_tab, bg="grey")
+        self.bought_seats =[]
+        seat_frame = tk.Frame(self.cinema_tab, bg="black")
         seat_frame.pack(pady=10)
 
         for seat in self.Seats:
@@ -90,20 +102,22 @@ class TicketBookingApp:
                   command=self.buy_ticket).pack(pady=10)
         tk.Button(self.cinema_tab, text="Back",
                   command=lambda: self.show_frame(self.main_tab)).pack(pady=10)
+        
 
     def setup_food_tab(self):
         tk.Label(self.food_tab, text="Food", font=(
-            'Arial', 24), bg="grey").pack(pady=20)
+            'Arial', 24), bg="black", fg="white").pack(pady=20)
 
         self.food_items = [("Popcorn", 33000), ("Fries", 55000),
                            ("Donut", 15000), ("Milk tea", 20000), ("Lemon tea", 20000)]
         self.food_vars = []
 
         for food, price in self.food_items:
-            frame = tk.Frame(self.food_tab, bg="grey")
+            frame = tk.Frame(self.food_tab, bg="black")
             frame.pack(pady=5)
 
-            tk.Label(frame, text=food, bg="grey").pack(side='left', padx=10)
+            tk.Label(frame, text=food, bg="black", fg="white").pack(side='left', padx=10)
+            tk.Label(frame, text=f"Rp{price}", bg="black", fg="white").pack(side='left', padx=10)
             var = tk.IntVar()
             self.food_vars.append((var, price))
             tk.Spinbox(frame, from_=0, to=10, textvariable=var,
@@ -119,21 +133,42 @@ class TicketBookingApp:
             'Arial', 24), bg="beige").pack(pady=20)
         self.history_listbox = tk.Listbox(self.history_tab)
         self.history_listbox.pack(pady=10, fill=tk.BOTH, expand=True)
+        tk.Button(self.history_tab, text="Delete", command=self.history_del).pack(pady=10)
         tk.Button(self.history_tab, text="Pay", command=self.pay).pack(pady=10)
         tk.Button(self.history_tab, text="Back",
                   command=lambda: self.show_frame(self.main_tab)).pack(pady=10)
-
-    def select_seat(self, seat):
-        if seat in self.selected_seats:
-            self.selected_seats.remove(seat)
-            for btn in self.seat_buttons:
-                if btn.cget("text") == seat:
-                    btn.config(bg='SystemButtonFace')
+        
+    def history_del(self):
+        selected_index = self.history_listbox.curselection()
+        if not selected_index:
+            messagebox.showinfo("Warning", "Please select an item to delete.")
         else:
-            self.selected_seats.append(seat)
-            for btn in self.seat_buttons:
-                if btn.cget("text") == seat:
-                    btn.config(bg='lightgreen')
+            item_index = selected_index[0]
+            item = self.history[item_index]
+            if item[0] == "Movie Ticket":
+                messagebox.showinfo("Warning", "Tickets cannot be unselected.")
+            else:    
+                self.Wallet2 += item[2]
+                self.history.pop(item_index)
+                self.update_history()
+        
+    def select_seat(self, seat):
+       if seat in self.bought_seats:
+           messagebox.showinfo("Warning", "That seat is already bought.")
+       else:
+           if seat in self.selected_seats:
+               self.selected_seats.remove(seat)
+               for btn in self.seat_buttons:
+                   if btn.cget("text") == seat:
+                       btn.config(bg="#f0f0f0")
+               self.bought_seats.remove(seat)    
+           else:
+               self.selected_seats.append(seat)
+               for btn in self.seat_buttons:
+                   if btn.cget("text") == seat:
+                       btn.config(bg='lightgreen')
+               self.bought_seats.append(seat)
+
 
     def buy_ticket(self):
         if not self.selected_seats:
@@ -141,15 +176,19 @@ class TicketBookingApp:
         else:
             count = len(self.selected_seats)
             charge = count * 50000
-            if self.Wallet >= charge:
-                self.Wallet -= charge
+            if self.Wallet2 >= charge:
+                self.Wallet2 -= charge
                 messagebox.showinfo(
                     "Notice", f"That will be Rp{charge} for {count} ticket(s).")
                 self.history.append(["Movie Ticket", count, charge])
                 self.update_history()
                 self.selected_seats.clear()
                 for btn in self.seat_buttons:
-                    btn.config(bg='SystemButtonFace')
+                    btn.config(bg="#f0f0f0")
+                for seat in self.bought_seats:
+                    for btn in self.seat_buttons:
+                       if btn.cget("text") == seat:
+                           btn.config(bg='red')
                 self.show_frame(self.main_tab)
             else:
                 messagebox.showinfo(
@@ -165,8 +204,8 @@ class TicketBookingApp:
                 var.set(0)  # Set nilai var menjadi 0
 
         if total_cost > 0:
-            if self.Wallet >= total_cost:
-                self.Wallet -= total_cost
+            if self.Wallet2 >= total_cost:
+                self.Wallet2 -= total_cost
                 messagebox.showinfo(
                     "Notice", f"That will be Rp{total_cost} for your food order.")
                 self.update_history()
@@ -194,9 +233,10 @@ class TicketBookingApp:
             self.history.clear()
             self.update_history()
             self.show_frame(self.main_tab)
+            self.label.config(text=f"Balance : Rp{self.Wallet}")
         else:
             messagebox.showinfo(
-                "Warning", "Your balance is not enough, please remove some items.")
+                "Warning", "Your balance is not enough, please add your balance.")
 
 
 if __name__ == "__main__":
